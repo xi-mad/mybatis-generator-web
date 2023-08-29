@@ -16,19 +16,7 @@ public class MyStringUtils {
         if (str != null) {
             if (str.contains("_")) {
                 str = str.toLowerCase();
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.valueOf(str.charAt(0)).toUpperCase());
-                for (int i = 1; i < str.length(); i++) {
-                    char c = str.charAt(i);
-                    if (c != '_') {
-                        sb.append(c);
-                    } else {
-                        if (i + 1 < str.length()) {
-                            sb.append(String.valueOf(str.charAt(i + 1)).toUpperCase());
-                            i++;
-                        }
-                    }
-                }
+                StringBuilder sb = buildString(str);
                 return sb.toString();
             } else {
                 String firstChar = String.valueOf(str.charAt(0)).toUpperCase();
@@ -37,6 +25,23 @@ public class MyStringUtils {
             }
         }
         return null;
+    }
+
+    private static StringBuilder buildString(String str) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.valueOf(str.charAt(0)).toUpperCase());
+        for (int i = 1; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c != '_') {
+                sb.append(c);
+            } else {
+                if (i + 1 < str.length()) {
+                    sb.append(String.valueOf(str.charAt(i + 1)).toUpperCase());
+                    i++;
+                }
+            }
+        }
+        return sb;
     }
 
 }

@@ -18,7 +18,6 @@ public class ConnectionManager {
         Class.forName("org.sqlite.JDBC");
         File file = new File(DB_URL.substring("jdbc:sqlite:".length())).getAbsoluteFile();
         _LOG.info("database FilePath :{}", file.getAbsolutePath());
-        Connection conn = DriverManager.getConnection(DB_URL);
-        return conn;
+        return DriverManager.getConnection(DB_URL);
     }
 }

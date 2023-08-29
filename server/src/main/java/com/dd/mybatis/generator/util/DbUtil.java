@@ -217,7 +217,7 @@ public class DbUtil {
 //		}
 //	}
 
-    public static String getConnectionUrlWithSchema(DatabaseConfig dbConfig) throws ClassNotFoundException {
+    public static String getConnectionUrlWithSchema(DatabaseConfig dbConfig) {
 		DbType dbType = DbType.valueOf(dbConfig.getDbType());
 		String connectionUrl = String.format(dbType.getConnectionUrlPattern(),
 				portForwaring ? "127.0.0.1" : dbConfig.getHost(), portForwaring ? dbConfig.getLport() : dbConfig.getPort(), dbConfig.getSchema(), dbConfig.getEncoding());
