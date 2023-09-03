@@ -5,6 +5,7 @@ import com.dd.mybatis.generator.model.DatabaseConfig;
 import com.dd.mybatis.generator.model.DbType;
 import com.dd.mybatis.generator.model.GeneratorConfig;
 import com.dd.mybatis.generator.plugins.DbRemarksCommentGenerator;
+import com.dd.mybatis.generator.request.Connection;
 import com.dd.mybatis.generator.util.ConfigHelper;
 import com.dd.mybatis.generator.util.DbUtil;
 import lombok.AllArgsConstructor;
@@ -148,7 +149,7 @@ public class MybatisGeneratorBridge {
             jdbcConfig.addProperty("useInformationSchema", "true");
         }
         jdbcConfig.setDriverClass(DbType.valueOf(dbType).getDriverClass());
-        jdbcConfig.setConnectionURL(DbUtil.getConnectionUrlWithSchema(selectedDatabaseConfig));
+        jdbcConfig.setConnectionURL(DbUtil.getConnectionUrlWithSchema(new Connection()));
         jdbcConfig.setUserId(selectedDatabaseConfig.getUsername());
         jdbcConfig.setPassword(selectedDatabaseConfig.getPassword());
         if (DbType.Oracle.name().equals(dbType)) {

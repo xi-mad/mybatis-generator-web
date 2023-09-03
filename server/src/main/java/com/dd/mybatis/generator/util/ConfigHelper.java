@@ -1,21 +1,17 @@
 package com.dd.mybatis.generator.util;
 
-import com.dd.mybatis.generator.model.DatabaseConfig;
 import com.dd.mybatis.generator.model.DbType;
 import com.dd.mybatis.generator.model.GeneratorConfig;
+import com.dd.mybatis.generator.request.Connection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -44,52 +40,48 @@ public class ConfigHelper {
         }
     }
 
-    public static List<DatabaseConfig> loadDatabaseConfig() throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+    public static List<Connection> loadDatabaseConfig() throws Exception {
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement();
              ResultSet rs = stat.executeQuery("SELECT * FROM dbs")) {
-            List<DatabaseConfig> configs = new ArrayList<>();
+            List<Connection> configs = new ArrayList<>();
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String value = rs.getString("value");
-                DatabaseConfig databaseConfig = gson.fromJson(value, DatabaseConfig.class);
-                databaseConfig.setId(id);
-                configs.add(databaseConfig);
+                Connection connection = gson.fromJson(value, Connection.class);
+                connection.setId(id);
+                configs.add(connection);
             }
             return configs;
         }
     }
 
-    public static void saveDatabaseConfig(boolean isUpdate, Integer primaryKey, DatabaseConfig dbConfig) throws Exception {
-        String configName = dbConfig.getName();
-        try (Connection conn = ConnectionManager.getConnection();
+    public static void saveDatabaseConfig(Connection request) throws Exception {
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement()) {
-            if (!isUpdate) {
-                ResultSet rs1 = stat.executeQuery("SELECT * from dbs where name = '" + configName + "'");
-                if (rs1.next()) {
-                    throw new RuntimeException("配置已经存在, 请使用其它名字");
-                }
-            }
-            String jsonStr = gson.toJson(dbConfig);
+            String jsonStr = gson.toJson(request);
             String sql;
-            if (isUpdate) {
-                sql = String.format("UPDATE dbs SET name = '%s', value = '%s' where id = %d", configName, jsonStr, primaryKey);
+            if (request.getId() == null) {
+                sql = String.format("INSERT INTO dbs (name, value) values('%s', '%s')", request.getName(), jsonStr);
             } else {
-                sql = String.format("INSERT INTO dbs (name, value) values('%s', '%s')", configName, jsonStr);
+                sql = String.format("UPDATE dbs SET name = '%s', value = '%s' where id = %d", request.getName(), jsonStr, request.getId());
             }
             stat.executeUpdate(sql);
         }
     }
 
-    public static void deleteDatabaseConfig(DatabaseConfig databaseConfig) throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+    public static void deleteDatabaseConfig(Integer id) throws Exception {
+        if (id == null) {
+            return;
+        }
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement()) {
-            stat.executeUpdate(String.format("delete from dbs where id=%d", databaseConfig.getId()));
+            stat.executeUpdate(String.format("delete from dbs where id=%d", id));
         }
     }
 
     public static void saveGeneratorConfig(GeneratorConfig generatorConfig) throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement()) {
             String jsonStr = gson.toJson(generatorConfig);
             stat.executeUpdate(String.format("INSERT INTO generator_config values('%s', '%s')", generatorConfig.getName(), jsonStr));
@@ -97,7 +89,7 @@ public class ConfigHelper {
     }
 
     public static GeneratorConfig loadGeneratorConfig(String name) throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement();
              ResultSet rs = stat.executeQuery(String.format("SELECT * FROM generator_config where name='%s'", name));) {
             GeneratorConfig generatorConfig = null;
@@ -110,7 +102,7 @@ public class ConfigHelper {
     }
 
     public static List<GeneratorConfig> loadGeneratorConfigs() throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement();
              ResultSet rs = stat.executeQuery("SELECT * FROM generator_config")) {
             List<GeneratorConfig> configs = new ArrayList<>();
@@ -123,7 +115,7 @@ public class ConfigHelper {
     }
 
     public static int deleteGeneratorConfig(String name) throws Exception {
-        try (Connection conn = ConnectionManager.getConnection();
+        try (java.sql.Connection conn = ConnectionManager.getConnection();
              Statement stat = conn.createStatement();) {
             return stat.executeUpdate(String.format("DELETE FROM generator_config where name='%s'", name));
         }
@@ -147,14 +139,9 @@ public class ConfigHelper {
 
     public static List<String> getAllJDBCDriverJarPaths() {
         List<String> jarFilePathList = new ArrayList<>();
-        URL url = Thread.currentThread().getContextClassLoader().getResource("logback.xml");
         try {
-            File file;
-            if (url.getPath().contains(".jar")) {
-                file = new File("lib/");
-            } else {
-                file = new File("src/main/resources/lib");
-            }
+            URL url = ConfigHelper.class.getResource("/lib");
+            File file = new File(url.toURI());
             _LOG.info("jar lib path: {}", file.getCanonicalPath());
             File[] jarFiles = file.listFiles();
             if (jarFiles != null) {

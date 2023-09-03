@@ -3,6 +3,7 @@ package com.dd.mybatis.generator.util;
 import com.dd.mybatis.generator.exception.DbDriverLoadingException;
 import com.dd.mybatis.generator.model.DatabaseConfig;
 import com.dd.mybatis.generator.model.DbType;
+import com.dd.mybatis.generator.request.Connection;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -13,7 +14,6 @@ import org.mybatis.generator.internal.util.ClassloaderUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -135,8 +135,8 @@ public class DbUtil {
 //		executorService.shutdown();
 	}
 
-    public static Connection getConnection(DatabaseConfig config) throws ClassNotFoundException, SQLException {
-		DbType dbType = DbType.valueOf(config.getDbType());
+    public static java.sql.Connection getConnection(Connection config) throws ClassNotFoundException, SQLException {
+		DbType dbType = DbType.valueOf(config.getType());
 		if (drivers.get(dbType) == null){
 			loadDbDriver(dbType);
 		}
@@ -148,48 +148,40 @@ public class DbUtil {
 	    props.setProperty("password", config.getPassword()); //$NON-NLS-1$
 
 		DriverManager.setLoginTimeout(DB_CONNECTION_TIMEOUTS_SECONDS);
-	    Connection connection = drivers.get(dbType).connect(url, props);
+	    java.sql.Connection connection = drivers.get(dbType).connect(url, props);
         _LOG.info("getConnection, connection url: {}", connection);
         return connection;
     }
 
-    public static List<String> getTableNames(DatabaseConfig config, String filter) throws Exception {
-		Session sshSession = getSSHSession(config);
-		engagePortForwarding(sshSession, config);
-		try (Connection connection = getConnection(config)) {
+    public static List<String> getTableNames(Connection config) throws Exception {
+		try (java.sql.Connection connection = getConnection(config)) {
 			List<String> tables = new ArrayList<>();
 			DatabaseMetaData md = connection.getMetaData();
 			ResultSet rs;
-			if (DbType.valueOf(config.getDbType()) == DbType.SQL_Server) {
+			if (DbType.valueOf(config.getType()) == DbType.SQL_Server) {
 				String sql = "select name from sysobjects  where xtype='u' or xtype='v' order by name";
 				rs = connection.createStatement().executeQuery(sql);
 				while (rs.next()) {
 					tables.add(rs.getString("name"));
 				}
-			} else if (DbType.valueOf(config.getDbType()) == DbType.Oracle) {
+			} else if (DbType.valueOf(config.getType()) == DbType.Oracle) {
 				rs = md.getTables(null, config.getUsername().toUpperCase(), null, new String[]{"TABLE", "VIEW"});
-			} else if (DbType.valueOf(config.getDbType()) == DbType.Sqlite) {
+			} else if (DbType.valueOf(config.getType()) == DbType.Sqlite) {
 				String sql = "Select name from sqlite_master;";
 				rs = connection.createStatement().executeQuery(sql);
 				while (rs.next()) {
 					tables.add(rs.getString("name"));
 				}
 			} else {
-				// rs = md.getTables(null, config.getUsername().toUpperCase(), null, null);
 				rs = md.getTables(config.getSchema(), null, "%", new String[]{"TABLE", "VIEW"});//针对 postgresql 的左侧数据表显示
 			}
 			while (rs.next()) {
 				tables.add(rs.getString(3));
 			}
-			if (StringUtils.isNotBlank(filter)) {
-				tables.removeIf(x -> !x.contains(filter) && !(x.replaceAll("_", "").contains(filter)));
-            }
 			if (tables.size() > 1) {
 				Collections.sort(tables);
 			}
 			return tables;
-		} finally {
-			shutdownPortForwarding(sshSession);
 		}
 	}
 
@@ -217,10 +209,10 @@ public class DbUtil {
 //		}
 //	}
 
-    public static String getConnectionUrlWithSchema(DatabaseConfig dbConfig) {
-		DbType dbType = DbType.valueOf(dbConfig.getDbType());
+    public static String getConnectionUrlWithSchema(Connection request) {
+		DbType dbType = DbType.valueOf(request.getType());
 		String connectionUrl = String.format(dbType.getConnectionUrlPattern(),
-				portForwaring ? "127.0.0.1" : dbConfig.getHost(), portForwaring ? dbConfig.getLport() : dbConfig.getPort(), dbConfig.getSchema(), dbConfig.getEncoding());
+				request.getHost(), request.getPort(), request.getSchema(), request.getEncoding());
         _LOG.info("getConnectionUrlWithSchema, connection url: {}", connectionUrl);
         return connectionUrl;
     }
