@@ -1,4 +1,4 @@
-package com.dd.mybatis.generator.request;
+package com.dd.mybatis.generator.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

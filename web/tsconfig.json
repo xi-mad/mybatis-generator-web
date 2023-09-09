@@ -3,6 +3,13 @@
     // ...
     "types": [
       "element-plus/global"
+    ],
+    "lib": [
+      "decorators",
+      "dom",
+      "es5",
+      "scripthost",
+      "es2015.promise"
     ]
   }
 }

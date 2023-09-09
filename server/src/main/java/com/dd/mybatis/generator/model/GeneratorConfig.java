@@ -16,63 +16,37 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GeneratorConfig {
 
-	/**
-	 * 本配置的名称
-	 */
+	private Integer id;
 	private String name;
-
-	private String connectorJarPath;
-
-	private String projectFolder;
-
-	private String modelPackage;
-
-	private String modelPackageTargetFolder;
-
-	private String daoPackage;
-
-	private String daoTargetFolder;
-
-	private String mapperName;
-
-	private String mappingXMLPackage;
-
-	private String mappingXMLTargetFolder;
-
-	private String tableName;
-
-	private String domainObjectName;
-
-	private boolean offsetLimit;
-
-	private boolean comment;
-
-	private boolean overrideXML;
-
-	private boolean needToStringHashcodeEquals;
-
-	private boolean useLombokPlugin;
-
-	private boolean needForUpdate;
-
-	private boolean annotationDAO;
-
-	private boolean annotation;
-
-	private boolean useActualColumnNames;
-
-	private boolean useExample;
-
-	private String generateKeys;
-
+	private Integer connectionId;
+	private String table;
+	private String bean;
+	private String primaryKey;
+	private String path;
+	private String beanPackage;
+	private String beanDir;
+	private String mapperPackage;
+	private String mapperDir;
+	private String interfaceName;
+	private String xmlPackage;
+	private String xmlDir;
 	private String encoding;
-
+	private boolean useExample;
+	private boolean offsetLimit;
+	private boolean comment;
+	private boolean overrideXML;
+	private boolean useLombokPlugin;
+	private boolean needToStringHashcodeEquals;
+	private boolean useSchemaPrefix;
+	private boolean forUpdate;
+	private boolean annotationDAO;
+	private boolean useDAOExtendStyle;
+	private boolean jsr310Support;
+	private boolean annotation;
+	private boolean useActualColumnNames;
 	private boolean useTableNameAlias;
 
-	private boolean useDAOExtendStyle;
 
-    private boolean useSchemaPrefix;
 
-    private boolean jsr310Support;
 
 }
