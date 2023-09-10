@@ -8,7 +8,6 @@
                 <el-col :span="12">
                     <div style="float: right">
                         <el-button type="primary" @click="newConnectionVisible = true">数据库链接</el-button>
-                        <el-button type="primary" @click="generate">配置列表</el-button>
                     </div>
                 </el-col>
             </el-row>
@@ -27,6 +26,9 @@
                                 </span>
                                 <span v-if="data.host">
                                     <el-button-group>
+                                        <el-button size="small" @click="editConn(data)"
+                                            ><el-icon><Edit /></el-icon
+                                        ></el-button>
                                         <el-button size="small" type="primary" @click="tables(data)"
                                             ><el-icon><Refresh /></el-icon
                                         ></el-button>
@@ -36,7 +38,7 @@
                                     </el-button-group>
                                 </span>
                                 <span v-else>
-                                    <el-button size="small" type="success" @click="aim(data)"
+                                    <el-button size="small" type="primary" @click="aim(data)"
                                         ><el-icon><Aim /></el-icon
                                     ></el-button>
                                 </span>
@@ -184,10 +186,9 @@
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from "vue";
-import { Aim, Cellphone, Delete, Platform, Refresh } from "@element-plus/icons-vue";
+import {Cellphone, Delete, Edit, Platform} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { request } from "@/utils/http";
-import * as mock from "@/mock";
 
 const newConnectionVisible = ref(false);
 const form = ref({
@@ -221,7 +222,7 @@ const form = ref({
     useTableNameAliasCheckbox: false,
 });
 
-const conn = reactive({
+const conn = ref({
     id: "",
     name: "",
     type: "MySQL",
@@ -262,7 +263,7 @@ const generate = () => {
 };
 
 const saveConf = () => {
-    request.post("/api/connection/save", conn).then(function (resp: any) {
+    request.post("/api/connection/save", conn.value).then(function (resp: any) {
         ElMessage.success(resp.message);
         newConnectionVisible.value = false;
         refresh();
@@ -270,13 +271,13 @@ const saveConf = () => {
 };
 
 const testConnection = () => {
-    request.post("/api/connection/test", conn).then(function (resp: any) {
+    request.post("/api/connection/test", conn.value).then(function (resp: any) {
         ElMessage.success(resp.message);
     });
 };
 
 const tables = (conn) => {
-    request.post("/api/main/list/table", conn).then(function (resp: any) {
+    request.get("/api/main/list/table?id=" + conn.id).then(function (resp: any) {
         cache.value[conn.id].children = [];
         resp.data.forEach((elem) => {
             cache.value[conn.id].children.push({
@@ -306,6 +307,11 @@ const aim = (data) => {
     form.value.bean = hump;
     form.value.interfaceName = hump + "Mapper";
 };
+
+const editConn = (data) => {
+    conn.value = data
+    newConnectionVisible.value = true;
+}
 
 const toHump = (name) => {
     const res = name.replace(/\_(\w)/g, function (all, letter) {
