@@ -2,3 +2,6 @@ spring:
   datasource:
     url: jdbc:sqlite:./config/sqlite3.db
     driver-class-name: org.sqlite.JDBC
+  web:
+    resources:
+      static-locations: classpath:/static/
